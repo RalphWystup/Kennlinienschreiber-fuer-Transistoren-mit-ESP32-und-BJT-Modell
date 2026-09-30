@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kennlinienschreiber {{V}}</title>
+<style>
+:root{
+  --grund:#fbfaf7; --papier:#ffffff; --linie:#d8d3c8; --text:#22282b; --leise:#6d757a;
+  --akzent:#0E7C86; --akzent2:#0b616a; --warn:#B3261E; --gelb:#C77400; --mess:#233b45;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--grund);color:var(--text);
+     font:15px/1.55 "Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif}
+header{background:var(--akzent2);color:#fff;padding:12px 18px 10px}
+header h1{margin:0;font-size:20px;font-weight:600;letter-spacing:.01em}
+#fassung{font-size:12.5px;opacity:.9;margin-top:2px}
+nav{display:flex;flex-wrap:wrap;gap:2px;background:var(--akzent);padding:0 10px}
+nav button{background:transparent;border:0;color:#e8f4f5;font:inherit;font-size:14px;
+           padding:9px 14px;cursor:pointer;border-bottom:3px solid transparent}
+nav button:hover{background:rgba(255,255,255,.12)}
+nav button.an{background:var(--grund);color:var(--akzent2);font-weight:600;border-bottom-color:var(--gelb)}
+main{padding:12px 18px 40px;max-width:1500px}
+section{display:none}
+section.an{display:block}
+.ablauf{background:#eef6f7;border-left:4px solid var(--akzent);padding:8px 12px;margin:0 0 10px;
+        font-size:14px;color:#1d3d42}
+.zeile{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
+.karte{background:var(--papier);border:1px solid var(--linie);border-radius:6px;padding:10px 12px}
+.karte h3{margin:0 0 8px;font-size:14px;color:var(--akzent2);letter-spacing:.02em;text-transform:uppercase}
+button.tat{background:var(--akzent);color:#fff;border:0;border-radius:5px;padding:9px 16px;
+           font:inherit;font-weight:600;cursor:pointer;margin:0 6px 8px 0}
+button.tat:hover{background:var(--akzent2)}
+button.tat[disabled]{background:#9db3b6;cursor:progress}
+.schieber{display:grid;grid-template-columns:150px 1fr 110px;gap:4px 8px;align-items:center;
+          font-size:13.5px;margin-top:4px}
+.schieber input[type=range]{width:100%}
+.schieber .wert{font-family:"DejaVu Sans Mono",Consolas,monospace;text-align:right;color:var(--akzent2)}
+table{border-collapse:collapse;font-size:13px;margin:6px 0}
+th,td{border:1px solid var(--linie);padding:3px 7px;text-align:left;vertical-align:top}
+th{background:#f1efe9;font-weight:600}
+td.z{text-align:right;font-family:"DejaVu Sans Mono",Consolas,monospace}
+tr.mw td{background:#f6fbfb}
+canvas{background:var(--papier);border:1px solid var(--linie);border-radius:6px;max-width:100%}
+.kenn{display:grid;grid-template-columns:auto auto;gap:2px 14px;font-size:14px;margin-top:4px}
+.kenn b{font-family:"DejaVu Sans Mono",Consolas,monospace;font-weight:600;color:var(--akzent2);text-align:right}
+.hinweis{font-size:12.5px;color:var(--leise);margin:6px 0 0}
+.gut{color:var(--akzent)} .schlecht{color:var(--warn)}
+code{font-family:"DejaVu Sans Mono",Consolas,monospace;font-size:.92em;background:#f1efe9;padding:0 3px;border-radius:3px}
+pre{font-family:"DejaVu Sans Mono",Consolas,monospace;font-size:12.5px;background:#f6f5f1;
+    border:1px solid var(--linie);border-radius:5px;padding:8px 10px;overflow-x:auto}
+.doku{max-width:56em;font-size:15px}
+.doku h2{font-size:21px;color:var(--akzent2);border-bottom:2px solid var(--linie);padding-bottom:3px;margin-top:28px}
+.doku h3{font-size:17px;color:var(--akzent2);margin-top:20px}
+.doku h4{font-size:15px;margin-top:16px}
+.doku figure{margin:14px 0;text-align:center}
+.doku figure img{max-width:100%;border:1px solid var(--linie);border-radius:4px}
+.doku figcaption{font-size:13px;color:var(--leise);margin-top:4px;text-align:left}
+.doku table{width:100%}
+.f{font-family:"DejaVu Serif","Georgia",serif;font-style:italic}
+.fb{font-family:"DejaVu Serif","Georgia",serif;font-style:italic;background:#f6f5f1;border-left:3px solid var(--gelb);
+    padding:7px 12px;margin:10px 0;overflow-x:auto;font-size:15px}
+.matrix{font-family:"DejaVu Sans Mono",Consolas,monospace;font-size:12.5px;white-space:pre;
+        background:#f6f5f1;border:1px solid var(--linie);border-radius:5px;padding:7px 10px;display:inline-block}
+img.plan{max-width:100%;border:1px solid var(--linie);border-radius:5px}
+.weiter{margin:.6em 0 0;font-size:.92em;line-height:1.5;color:#3a3a3a;max-width:70em}
+.weiter a{color:#0a4f7a}
+</style>
+</head>
+<body>
+<header>
+  <h1>Kennlinienschreiber für Transistoren mit ESP32 und BJT-Modell</h1>
+  <div id="fassung">Fassung {{V}} · {{DATUM}} · {{NAME}}</div>
+  <p class="weiter">Dieses Gerät ist der Anfang einer Kette. Was aus seinen Kennlinien wird — die
+    Parameter eines Gummel-Poon-Modells, daraus der Arbeitspunkt und die Verstärkung einer ganzen
+    Schaltung, und die Gegenprobe gegen LTspice —, steht in
+    <a href="https://ralphwystup.github.io/Transistoren-Transistortester-und-daraus-erzeugte-Modelle/">Transistoren,
+    der Transistortester und die daraus erzeugten Modelle</a>. Das Verfahren, mit dem eine Schaltung aus
+    nichtlinearen Bauteilen überhaupt gerechnet wird, ist in
+    <a href="https://ralphwystup.github.io/Schaltungssimulation-von-nichtlinearen-Differentialgleichungssystemen/">Schaltungssimulation
+    von nichtlinearen Differentialgleichungssystemen</a> hergeleitet; seit deren Teil XII ist der
+    Transistor dort als Netzlisten-Bauteil eingebaut.</p>
+</header>
+
+<nav id="reiter">
+  <button data-z="messplatz" class="an">Messplatz</button>
+  <button data-z="quadranten">Vier Quadranten</button>
+  <button data-z="kleinsignal">Kleinsignal und Vierpol</button>
+  <button data-z="manuskript">Manuskript</button>
+  <button data-z="anleitung">Anleitung</button>
+</nav>
+
+<main>
+
+<!-- ================================================== Messplatz -->
+<section id="s-messplatz" class="an">
+  <p class="ablauf"><b>So läuft eine Messung:</b> Basisstrom vorgeben → der äußere Regler stellt DA2, bis
+  <span class="f">I<sub>B</sub> = (U<sub>RB1</sub>−U<sub>RB2</sub>)/R<sub>B</sub> − U<sub>RB2</sub>/R<sub>B_GND</sub></span>
+  den Sollwert hat → der innere, schnellere Regler stellt DA1, bis <span class="f">U<sub>CE</sub> = U<sub>RC2</sub></span> stimmt →
+  erst danach wird <span class="f">I<sub>C</sub> = (U<sub>RC1</sub>−U<sub>RC2</sub>)/R<sub>C</sub></span> abgelesen.</p>
+
+  <div class="zeile">
+    <div class="karte" style="flex:1 1 430px">
+      <h3>Bedienung</h3>
+      <button class="tat" id="messen">Regelung einschwingen lassen</button>
+      <button class="tat" id="kennlinie">Kennlinienfeld aufnehmen</button>
+      <div class="schieber" id="regler"></div>
+      <p class="hinweis" id="grenzen"></p>
+    </div>
+
+    <div class="karte" style="flex:1 1 430px">
+      <h3>Register am Gerät (Modbus, Adresse 1)</h3>
+      <table id="register"><thead><tr><th>Reg.</th><th>Name</th><th>Inhalt</th>
+        <th class="z">Wert</th><th class="z">entspricht</th></tr></thead><tbody></tbody></table>
+      <p class="hinweis">Register 0…3 beschreibbar, 4…11 nur lesbar. 8…11 sind die Mittelwerte über
+      <span id="nmiw"></span> Abtastungen, ganzzahlig gerechnet wie in der Firmware.</p>
+    </div>
+  </div>
+
+  <div class="zeile" style="margin-top:12px">
+    <div class="karte" style="flex:1 1 500px">
+      <h3>Einschwingen der Kaskade</h3>
+      <canvas id="c_regel" width="620" height="320"></canvas>
+      <div class="kenn" id="regelwerte"></div>
+    </div>
+    <div class="karte" style="flex:1 1 500px">
+      <h3>Aufgenommenes Kennlinienfeld</h3>
+      <canvas id="c_feld" width="620" height="320"></canvas>
+      <p class="hinweis" id="feldtext">Noch nicht aufgenommen — auf „Kennlinienfeld aufnehmen“ drücken.
+      Jeder Punkt wird einzeln eingeregelt, so wie am Gerät.</p>
+    </div>
+  </div>
+
+  <div class="zeile" style="margin-top:12px">
+    <div class="karte" style="flex:1 1 640px">
+      <h3>Der Aufbau, den die Simulation nachbildet</h3>
+      <img class="plan" src="{{BILD_UEBERSICHT}}" alt="Übersichtsplan des Messplatzes">
+    </div>
+    <div class="karte" style="flex:1 1 640px">
+      <h3>Dasselbe am Leitstand</h3>
+      <img class="plan" src="{{BILD_BLATT}}" alt="Bedienblatt des ersten Quadranten">
+    </div>
+  </div>
+</section>
+
+<!-- ================================================== Vier Quadranten -->
+<section id="s-quadranten">
+  <p class="ablauf"><b>Vier Quadranten, ein Arbeitspunkt:</b> Linien = Modell mit den angepassten Parametern,
+  Punkte = die Messung am BC337-25. Der Arbeitspunkt wird durch alle vier Felder durchgezogen; die Steigung
+  der Kennlinie in jedem Feld ist einer der vier h-Parameter. Unterhalb von etwa 0,3 V liegen die Modelllinien
+  über den Messpunkten: das Modell enthält keine Sättigung, es wurde an den aktiven Bereich angepasst
+  (U<sub>CE</sub> &gt; 1 V) und gilt nur dort.</p>
+  <div class="zeile">
+    <div class="karte" style="flex:1 1 300px">
+      <h3>Arbeitspunkt</h3>
+      <div class="schieber" id="regler2"></div>
+      <h3 style="margin-top:14px">Simulation gegen Messung</h3>
+      <div class="kenn" id="abweichung"></div>
+      <p class="hinweis">Verglichen wird punktweise: für jeden gemessenen Punkt liefert das Modell einen Wert,
+      angegeben sind die mittlere quadratische und die größte relative Abweichung.</p>
+    </div>
+    <div class="karte" style="flex:1 1 760px">
+      <canvas id="c_quad" width="800" height="740"></canvas>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================== Kleinsignal -->
+<section id="s-kleinsignal">
+  <p class="ablauf"><b>Vom Kennfeld zum Vierpol:</b> die vier h-Parameter sind die Ableitungen des Modells
+  im Arbeitspunkt, die Kettenmatrix folgt daraus durch Umrechnung, und aus dem Kettenprodukt von
+  Basiswiderstand, Transistor und Kollektorwiderstand ergeben sich Ein- und Ausgangswiderstand und die
+  Verstärkung der ganzen Stufe.</p>
+  <div class="zeile">
+    <div class="karte" style="flex:1 1 360px">
+      <h3>h-Parameter im Arbeitspunkt</h3>
+      <div class="kenn" id="hwerte"></div>
+      <p class="hinweis">Gegenprobe von Hand: <span class="f">g<sub>m</sub> = I<sub>C</sub>/(n·V<sub>T</sub>)</span>
+      — der Wert daneben ist die numerische Ableitung.</p>
+      <h3 style="margin-top:14px">Kettenmatrix des Transistors im Arbeitspunkt oben</h3>
+      <div class="matrix" id="amatrix"></div>
+    </div>
+    <div class="karte" style="flex:1 1 380px">
+      <h3>Emitterschaltung, durchgerechnet</h3>
+      <div class="kenn" id="verst"></div>
+      <h3 style="margin-top:14px">Kette A<sub>RB</sub> · A<sub>T</sub> · A<sub>RC</sub></h3>
+      <div class="matrix" id="agesamt"></div>
+      <p class="hinweis" id="handprobe"></p>
+    </div>
+    <div class="karte" style="flex:1 1 520px">
+      <h3>Arbeitsgerade im Ausgangskennlinienfeld</h3>
+      <canvas id="c_verst" width="560" height="380"></canvas>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================== Dokumente -->
+<section id="s-manuskript" class="doku"><!--MANUSKRIPT--></section>
+<section id="s-anleitung" class="doku"><!--ANLEITUNG--></section>
+
+</main>
+
+<script>
+"use strict";
+const DATEN = /*DATEN*/;
+const STAND = /*STAND*/;
+const G = STAND.geraet, P = STAND.P, VT = STAND.VT, SCH = STAND.schaltung;
+
+/* ---------------------------------------------------------------- Modell (dieselben vier Gleichungen
+   wie in den Python-Programmen; siehe Manuskript Abschnitt 5.1) */
+function icM(vbe, vce){ return P.Is * Math.exp(vbe/(P.n*VT)) * (1 + vce/P.VA); }
+function ibM(vbe, vce){
+  const ic = icM(vbe, vce), be = P.Beta_F / Math.sqrt(1 + ic/P.IKF);
+  let ib = ic/be;
+  for (let k = 0; k < 40; k++){
+    const n2 = (P.Is/be) * Math.exp((vbe - ib*P.RB)/(P.n*VT)) * (1 + vce/P.Vab);
+    if (Math.abs(n2-ib) <= 1e-20 + 1e-10*Math.abs(n2)){ ib = n2; break; }
+    ib = n2;
+  }
+  return ib;
+}
+function vbeAusIc(ic, vce){ return Math.log(ic/(P.Is*(1+vce/P.VA))) * (P.n*VT); }
+function vbeFuerIb(ib, vce){                       // Halbierung: I_B(U_BE) waechst streng monoton
+  let lo = 0.2, hi = 1.0;
+  for (let k = 0; k < 60; k++){ const m = .5*(lo+hi); if (ibM(m, vce) > ib) hi = m; else lo = m; }
+  return .5*(lo+hi);
+}
+
+/* Schaltung loesen: gegeben die beiden Speisespannungen, gesucht U_BE und U_CE.
+   Verschachtelte Halbierung — langsamer als Newton, aber nicht aus der Bahn zu werfen. */
+function loeseSchaltung(uRB1, uRC1, RB, RG, RC){
+  const vceZu = vbe => {                                   // Kollektormasche bei festem U_BE
+    let lo = 0, hi = Math.max(uRC1, 1e-6);
+    for (let k = 0; k < 44; k++){
+      const m = .5*(lo+hi);
+      if ((uRC1 - m)/RC - icM(vbe, m) > 0) lo = m; else hi = m;
+    }
+    return .5*(lo+hi);
+  };
+  let lo = 0, hi = 1.15, vce = uRC1;
+  for (let k = 0; k < 44; k++){
+    const m = .5*(lo+hi); vce = vceZu(m);
+    if ((uRB1 - m)/RB - m/RG - ibM(m, vce) > 0) lo = m; else hi = m;
+  }
+  const vbe = .5*(lo+hi); vce = vceZu(vbe);
+  return {vbe: vbe, vce: vce, ic: icM(vbe, vce), ib: ibM(vbe, vce)};
+}
+
+/* ---------------------------------------------------------------- Wandler und Register */
+const roh = u => Math.max(0, Math.min(G.maxwert, Math.round(u/G.k_ad)));
+const volt = r => r * G.k_ad;
+const daCode = u => Math.max(0, Math.min(G.maxwert, Math.round(u/G.k_da_klemme)));
+const daVolt = c => c * G.k_da_klemme;
+
+function Ringspeicher(){ this.w = []; this.i = 0; }
+Ringspeicher.prototype.mittel = function(x){
+  if (this.w.length < G.NMIW){ while (this.w.length < G.NMIW) this.w.push(x); }
+  else { this.w[this.i] = x; this.i = (this.i+1) % G.NMIW; }
+  let s = 0; for (let k = 0; k < G.NMIW; k++) s += this.w[k];
+  return Math.floor(s/G.NMIW);                     // ganzzahlig wie in ad_da.cpp
+};
+
+/* ---------------------------------------------------------------- Kaskadenregelung */
+function kaskade(sollIB, sollUCE, RB, RG, RC, rauschen, maxSchritt){
+  maxSchritt = maxSchritt || 300;
+  // Feinster Schritt, den die Messung ueberhaupt aufloest: I_B wird aus einer Differenz gerechnet, und
+  // der Abzweigstrom durch R_B_GND geht mit 1/R_B_GND ein — das ist der groessere der beiden Anteile.
+  const qIB  = G.k_ad * Math.sqrt(Math.pow(1/RB, 2) + Math.pow(1/RB + 1/RG, 2));
+  const qUCE = G.k_ad;
+  const tolIB = Math.max(0.005*sollIB, 1.2*qIB), tolUCE = Math.max(0.005, 1.2*qUCE);
+  let codeB = daCode(sollIB*RB + 0.65*(1 + RB/RG)), codeC = daCode(sollUCE + sollIB*260*RC);
+  const ring = [new Ringspeicher(), new Ringspeicher(), new Ringspeicher(), new Ringspeicher()];
+  const bahn = []; let reg = [0,0,0,0,0,0,0,0,0,0,0,0,0], z = null, ruhig = 0, n = 0, letzte = [0,0,0,0];
+  const stoerung = () => rauschen ? Math.round((Math.random()+Math.random()+Math.random()
+                                               +Math.random()-2)*rauschen) : 0;
+  for (n = 1; n <= maxSchritt; n++){
+    const uRB1 = daVolt(codeB), uRC1 = daVolt(codeC);
+    z = loeseSchaltung(uRB1, uRC1, RB, RG, RC);
+    const knoten = [uRC1, z.vce, uRB1, z.vbe];
+    letzte = knoten;
+    reg = [codeC, codeB, 0, 0, 0,0,0,0, 0,0,0,0, 0];
+    for (let k = 0; k < 4; k++){
+      const r = Math.max(0, Math.min(G.maxwert, roh(knoten[k]) + stoerung()));
+      reg[4+k] = r; reg[8+k] = ring[k].mittel(r);
+    }
+    const mUCE = volt(reg[9]);
+    const mIB  = (volt(reg[10]) - volt(reg[11]))/RB - volt(reg[11])/RG;
+    const mIC  = (volt(reg[8])  - volt(reg[9]))/RC;
+    bahn.push({n:n, ib:mIB, uce:mUCE, ic:mIC, codeB:codeB, codeC:codeC});
+    const fIB = sollIB - mIB, fUCE = sollUCE - mUCE;
+    // Abgewartet wird laenger als das Mittelungsfenster: erst dann ist der Mittelwert dem Istwert gefolgt.
+    if (Math.abs(fIB) <= tolIB && Math.abs(fUCE) <= tolUCE){ if (++ruhig >= G.NMIW + 2) break; }
+    else ruhig = 0;
+    // Beiwerte: der innere Kreis bekommt 0,35, der aeussere 0,12 — ein knappes Drittel davon (Kaskadenbedingung).
+    // Mehr als 0,6 traegt der Kreis nicht: der Mittelwert ueber NMIW Abtastungen wirkt wie eine Totzeit von
+    // (NMIW-1)/2 Schritten, und ein Integralregler wird damit oberhalb dieser Schranke instabil (Manuskript 3.2).
+    codeC = Math.max(0, Math.min(G.maxwert, codeC + Math.round(0.35*fUCE/G.k_da_klemme)));
+    codeB = Math.max(0, Math.min(G.maxwert, codeB + Math.round(0.12*fIB*RB/G.k_da_klemme)));
+  }
+  const l = bahn[bahn.length-1];
+  return {bahn:bahn, reg:reg, schritte:n, z:z, ringe:ring.map(r => r.w.slice()), knoten:letzte,
+          restIB: (l.ib - sollIB)/sollIB*100, restUCE: (l.uce - sollUCE)*1000,
+          qIB: qIB, qUCE: qUCE, restIBq: (l.ib - sollIB)/qIB, tolIB: tolIB,
+          codeC: l.codeC, codeB: l.codeB, anschlag: l.codeC >= G.maxwert || l.codeB >= G.maxwert,
+          ib:l.ib, uce:l.uce, ic:l.ic,
+          erreicht: Math.abs(l.ib-sollIB) <= tolIB && Math.abs(l.uce-sollUCE) <= tolUCE};
+}
+
+/* ---------------------------------------------------------------- h-Parameter und Kettenmatrix */
+function hParam(ic, vce){
+  const vbe = vbeAusIc(ic, vce), ib = ibM(vbe, vce), dV = 1e-4, dC = 1e-2;
+  const gm  = (icM(vbe+dV, vce) - icM(vbe-dV, vce))/(2*dV);
+  const go  = (icM(vbe, vce+dC) - icM(vbe, vce-dC))/(2*dC);
+  const gpi = (ibM(vbe+dV, vce) - ibM(vbe-dV, vce))/(2*dV);
+  const gmu = (ibM(vbe, vce+dC) - ibM(vbe, vce-dC))/(2*dC);
+  const h11 = 1/gpi, h21 = gm/gpi, h12 = -gmu/gpi, h22 = go - gm*gmu/gpi;
+  return {vbe:vbe, ib:ib, ic:ic, vce:vce, gm:gm, go:go, gpi:gpi, gmu:gmu,
+          h11:h11, h12:h12, h21:h21, h22:h22, Dh:h11*h22 - h12*h21};
+}
+function hZuA(h){            // Standard-Vierpoltheorie, Herleitung im Manuskript 7.2
+  const D = h.h11*h.h22 - h.h12*h.h21;
+  return [[-D/h.h21, -h.h11/h.h21], [-h.h22/h.h21, -1/h.h21]];
+}
+const mal = (A,B) => [[A[0][0]*B[0][0]+A[0][1]*B[1][0], A[0][0]*B[0][1]+A[0][1]*B[1][1]],
+                      [A[1][0]*B[0][0]+A[1][1]*B[1][0], A[1][0]*B[0][1]+A[1][1]*B[1][1]]];
+const quer = R => [[1,0],[1/R,1]];
+
+function verstaerker(){
+  const Vcc = SCH.Vcc, Rc = SCH.Rc, Rb = SCH.Rb, RL = SCH.RL, Ri = SCH.Ri;
+  // Arbeitspunkt: Newton-Raphson mit begrenzter Schrittweite (Manuskript 7.4)
+  let vbe = 0.65, vce = Vcc/2, it = 0;
+  const F = (a,b) => [ (Vcc-a)/Rb - ibM(a,b), (Vcc-b)/Rc - icM(a,b) ];
+  for (it = 1; it <= 60; it++){
+    const f = F(vbe, vce);
+    if (Math.abs(f[0]) < 1e-12 && Math.abs(f[1]) < 1e-12) break;
+    const hb = 1e-6, hc = 1e-4;
+    const fb = F(vbe+hb, vce), fb2 = F(vbe-hb, vce), fc = F(vbe, vce+hc), fc2 = F(vbe, vce-hc);
+    const J = [[(fb[0]-fb2[0])/(2*hb), (fc[0]-fc2[0])/(2*hc)],
+               [(fb[1]-fb2[1])/(2*hb), (fc[1]-fc2[1])/(2*hc)]];
+    const det = J[0][0]*J[1][1] - J[0][1]*J[1][0];
+    let d0 = (-f[0]*J[1][1] + f[1]*J[0][1])/det, d1 = (-f[1]*J[0][0] + f[0]*J[1][0])/det;
+    d0 = Math.max(-0.05, Math.min(0.05, d0)); d1 = Math.max(-2, Math.min(2, d1));
+    vbe = Math.min(1, Math.max(0.2, vbe+d0)); vce = Math.min(Vcc, Math.max(1e-3, vce+d1));
+  }
+  const ic = icM(vbe, vce), ib = ibM(vbe, vce);
+  const dV = 1e-4, dC = 1e-2;
+  const gm  = (icM(vbe+dV, vce) - icM(vbe-dV, vce))/(2*dV);
+  const go  = (icM(vbe, vce+dC) - icM(vbe, vce-dC))/(2*dC);
+  const gpi = (ibM(vbe+dV, vce) - ibM(vbe-dV, vce))/(2*dV);
+  const gmu = (ibM(vbe, vce+dC) - ibM(vbe, vce-dC))/(2*dC);
+  const h = {h11:1/gpi, h21:gm/gpi, h12:-gmu/gpi, h22:go - gm*gmu/gpi};
+  h.Dh = h.h11*h.h22 - h.h12*h.h21;
+  const AT = hZuA(h), A = mal(mal(quer(Rb), AT), quer(Rc));
+  const rein = (A[0][0]*RL + A[0][1])/(A[1][0]*RL + A[1][1]);
+  const raus = (A[1][1]*Ri + A[0][1])/(A[1][0]*Ri + A[0][0]);
+  const Av = RL/(A[0][0]*RL + A[0][1]), Ai = 1/(A[1][0]*RL + A[1][1]);
+  return {vbe:vbe, vce:vce, ic:ic, ib:ib, hFE:ic/ib, it:it, h:h, AT:AT, A:A,
+          r_ein:rein, r_aus:raus, A_v:Av, A_i:Ai, A_vs:Av*rein/(rein+Ri)};
+}
+
+/* ---------------------------------------------------------------- Vergleich mit der Messung */
+function vergleich(){
+  const erg = {};
+  let r = [];
+  DATEN.Ic_Vce.forEach(s => {
+    const ib = s.wert*1e-6;
+    for (let k = 0; k < s.x.length; k++){
+      if (!(s.x[k] > 1.0) || !s.y[k]) continue;
+      const vbe = vbeFuerIb(ib, s.x[k]);
+      r.push((icM(vbe, s.x[k])*1e3 - s.y[k])/s.y[k]);
+    }
+  });
+  erg.Ic_Vce = masse(r);
+  r = [];
+  DATEN.Ic_Ib.forEach(s => {
+    const vce = s.wert;
+    for (let k = 0; k < s.x.length; k++){
+      if (!s.y[k]) continue;
+      const vbe = vbeFuerIb(s.x[k]*1e-6, vce);
+      r.push((icM(vbe, vce)*1e3 - s.y[k])/s.y[k]);
+    }
+  });
+  erg.Ic_Ib = masse(r);
+  return erg;
+}
+function masse(r){
+  let s = 0, m = 0;
+  r.forEach(x => { s += x*x; m = Math.max(m, Math.abs(x)); });
+  return {n:r.length, rms:Math.sqrt(s/r.length)*100, max:m*100};
+}
+
+/* ---------------------------------------------------------------- Zeichenwerkzeug */
+function feld(c, x0, y0, w, h, xr, yr, opt){
+  opt = opt || {};
+  const g = c.getContext ? c.getContext("2d") : c;
+  const fx = v => x0 + (v - xr[0])/(xr[1]-xr[0])*w * (opt.xum ? -1 : 1) + (opt.xum ? w : 0);
+  const fy = v => y0 + h - (v - yr[0])/(yr[1]-yr[0])*h * (opt.yum ? -1 : 1) - (opt.yum ? h : 0);
+  g.save();
+  g.fillStyle = "#fff"; g.fillRect(x0, y0, w, h);
+  g.strokeStyle = "#e7ecee"; g.lineWidth = 1; g.font = "11px 'DejaVu Sans Mono',monospace";
+  g.fillStyle = "#41505a";
+  const N = 5;
+  for (let i = 0; i <= N; i++){
+    const xv = xr[0] + (xr[1]-xr[0])*i/N, yv = yr[0] + (yr[1]-yr[0])*i/N;
+    g.beginPath(); g.moveTo(fx(xv), y0); g.lineTo(fx(xv), y0+h); g.stroke();
+    g.beginPath(); g.moveTo(x0, fy(yv)); g.lineTo(x0+w, fy(yv)); g.stroke();
+    if (opt.xtext !== false){ g.textAlign = "center"; g.fillText(zahl(xv), fx(xv), y0+h+13); }
+    if (opt.ytext !== false){ g.textAlign = "right";  g.fillText(zahl(yv), x0-4, fy(yv)+4); }
+  }
+  g.strokeStyle = "#5a6a72"; g.strokeRect(x0, y0, w, h);
+  if (opt.xname){ g.textAlign = "right"; g.font = "12px sans-serif"; g.fillText(opt.xname, x0+w, y0+h+26); }
+  if (opt.yname){ g.textAlign = "left";  g.font = "12px sans-serif"; g.fillText(opt.yname, x0-2, y0-6); }
+  g.restore();
+  return {x:fx, y:fy, g:g, box:[x0,y0,w,h]};
+}
+function zahl(v){
+  const a = Math.abs(v);
+  if (a === 0) return "0";
+  if (a >= 1000) return v.toFixed(0);
+  if (a >= 10) return v.toFixed(1);
+  if (a >= 1) return v.toFixed(2);
+  return v.toFixed(3);
+}
+function linie(F, xs, ys, farbe, dick){
+  const g = F.g; g.save(); g.strokeStyle = farbe; g.lineWidth = dick || 1.6;
+  g.beginPath();
+  for (let k = 0; k < xs.length; k++){ const X = F.x(xs[k]), Y = F.y(ys[k]); k ? g.lineTo(X,Y) : g.moveTo(X,Y); }
+  g.stroke(); g.restore();
+}
+function punkte(F, xs, ys, farbe, gross){
+  const g = F.g; g.save(); g.fillStyle = farbe;
+  for (let k = 0; k < xs.length; k++){
+    g.beginPath(); g.arc(F.x(xs[k]), F.y(ys[k]), gross || 1.9, 0, 6.2832); g.fill();
+  }
+  g.restore();
+}
+
+/* ---------------------------------------------------------------- Bedienelemente */
+const REGLER = [
+  {id:"ib",   text:"I_B-Sollwert",      von:5,   bis:60,    schritt:.5,  wert:20,   e:" µA"},
+  {id:"uce",  text:"U_CE-Sollwert",     von:0.2, bis:11,    schritt:.1,  wert:5,    e:" V"},
+  {id:"ucemax", text:"U_CE-Bereich bis",von:2,   bis:11,    schritt:.5,  wert:6,    e:" V"},
+  {id:"rb",   text:"R_B (gesteckt)",    von:1000,bis:47000, schritt:100, wert:7500, e:" Ω"},
+  {id:"rc",   text:"R_C (gesteckt)",    von:47,  bis:2200,  schritt:1,   wert:470,  e:" Ω"},
+  {id:"rg",   text:"R_B_GND (gesteckt)",von:470, bis:10000, schritt:10,  wert:1000, e:" Ω"},
+  {id:"rausch", text:"Rauschen (Zählschritte)", von:0, bis:8, schritt:1, wert:0,    e:""},
+];
+const REGLER2 = [
+  {id:"icq",  text:"Arbeitspunkt I_C",  von:0.5, bis:12,  schritt:.1, wert:5, e:" mA"},
+  {id:"vceq", text:"Arbeitspunkt U_CE", von:1,   bis:11,  schritt:.1, wert:5, e:" V"},
+];
+const Z = {};
+function bauRegler(wo, liste, beiAenderung){
+  const d = document.getElementById(wo);
+  liste.forEach(r => {
+    Z[r.id] = r.wert;
+    const b = document.createElement("label"); b.textContent = r.text.replace(/_(\w+)/g, "$1"); b.htmlFor = "r_"+r.id;
+    const i = document.createElement("input");
+    i.type = "range"; i.id = "r_"+r.id; i.min = r.von; i.max = r.bis; i.step = r.schritt; i.value = r.wert;
+    const w = document.createElement("span"); w.className = "wert"; w.id = "w_"+r.id;
+    w.textContent = r.wert + r.e;
+    i.addEventListener("input", () => {
+      Z[r.id] = parseFloat(i.value); w.textContent = i.value + r.e; beiAenderung(r.id);
+    });
+    d.appendChild(b); d.appendChild(i); d.appendChild(w);
+  });
+}
+
+/* ---------------------------------------------------------------- Messplatz zeichnen */
+const NAMEN = ["Stellwert U_C  (DA1, Kollektorzweig)", "Stellwert U_B  (DA2, Basiszweig)",
+               "nicht belegt", "nicht belegt",
+               "U_RC1 roh", "U_RC2 = U_CE roh", "U_RB1 roh", "U_RB2 = U_BE roh",
+               "U_RC1 Mittelwert", "U_RC2 Mittelwert", "U_RB1 Mittelwert", "U_RB2 Mittelwert", "frei"];
+function zeigeRegister(reg){
+  const tb = document.querySelector("#register tbody"); tb.innerHTML = "";
+  for (let k = 0; k <= 12; k++){
+    const tr = document.createElement("tr");
+    if (k >= 8 && k <= 11) tr.className = "mw";
+    const u = k < 2 ? daVolt(reg[k]) : (k >= 4 && k <= 11 ? volt(reg[k]) : 0);
+    tr.innerHTML = "<td>" + k + "</td><td>" + (k < 4 ? "REG_DA0+" + k : (k < 8 ? "REG_AD0+" + (k-4)
+                 : (k < 12 ? "REG_ADMIW+" + (k-8) : "—"))) + "</td><td>" + NAMEN[k].replace(/_(\w+)/g,"<sub>$1</sub>")
+                 + "</td><td class='z'>" + reg[k] + "</td><td class='z'>"
+                 + (k < 4 && k >= 2 ? "—" : (k === 12 ? "—" : u.toFixed(4) + " V")) + "</td>";
+    tb.appendChild(tr);
+  }
+}
+let LETZT = null, FELD = null;
+function mess(){
+  const k = kaskade(Z.ib*1e-6, Z.uce, Z.rb, Z.rg, Z.rc, Z.rausch);
+  LETZT = k; zeigeRegister(k.reg); zeichneRegel(k); zeigeRegelwerte(k);
+  window.LABOR.letzt = {schritte:k.schritte, restIB:k.restIB, restUCE:k.restUCE,
+                        ib:k.ib, uce:k.uce, ic:k.ic, reg:k.reg.slice(), erreicht:k.erreicht,
+                        ringe:k.ringe, knoten:k.knoten, vbe:k.z.vbe, vce:k.z.vce,
+                        qIB:k.qIB, qUCE:k.qUCE, restIBq:k.restIBq};
+  return k;
+}
+function zeigeRegelwerte(k){
+  const s = (a,b) => "<span>"+a+"</span><b>"+b+"</b>";
+  document.getElementById("regelwerte").innerHTML =
+    s("Schritte bis zum Einrasten", k.schritte) +
+    s("Restabweichung I<sub>B</sub>", k.restIB.toFixed(3) + " % = " + k.restIBq.toFixed(2) + " Zählschritte") +
+    s("Auflösung von I<sub>B</sub>", (k.qIB*1e9).toFixed(0) + " nA = " + (k.qIB/(Z.ib*1e-6)*100).toFixed(2) + " %") +
+    s("Restabweichung U<sub>CE</sub>", k.restUCE.toFixed(2) + " mV") +
+    s("gemessener Kollektorstrom", (k.ic*1e3).toFixed(4) + " mA") +
+    s("gemessener Basisstrom", (k.ib*1e6).toFixed(3) + " µA") +
+    s("U<sub>BE</sub> am Prüfling", (k.z.vbe*1e3).toFixed(1) + " mV") +
+    s("Stromverstärkung h<sub>FE</sub>", (k.ic/k.ib).toFixed(1)) +
+    s("Ergebnis", k.erreicht ? "<span class='gut'>eingerastet</span>"
+                             : "<span class='schlecht'>nicht erreicht</span>");
+}
+function zeichneRegel(k){
+  const c = document.getElementById("c_regel"), g = c.getContext("2d");
+  g.clearRect(0,0,c.width,c.height);
+  const n = k.bahn.length;
+  const F1 = feld(c, 52, 14, c.width-70, 130, [1, Math.max(n,2)], [0, Math.max(Z.ib*1.4, 1)],
+                  {yname:"I_B [µA]  (Sollwert gestrichelt)", xtext:false});
+  linie(F1, [1,n], [Z.ib, Z.ib], "#B3261E", 1);
+  linie(F1, k.bahn.map(b=>b.n), k.bahn.map(b=>b.ib*1e6), "#0E7C86", 1.8);
+  const F2 = feld(c, 52, 180, c.width-70, 118, [1, Math.max(n,2)], [0, Math.max(Z.uce*1.4, 1)],
+                  {yname:"U_CE [V]", xname:"Regelschritt"});
+  linie(F2, [1,n], [Z.uce, Z.uce], "#B3261E", 1);
+  linie(F2, k.bahn.map(b=>b.n), k.bahn.map(b=>b.uce), "#C77400", 1.8);
+}
+
+function kennlinienfeld(){
+  const kn = document.getElementById("kennlinie"); kn.disabled = true;
+  kn.textContent = "läuft …";
+  setTimeout(() => {
+    const IB = [8,16,24,32,40].filter(x => x <= Z.ib*2.2 || true);
+    const kurven = [], punkteListe = []; let schritte = 0, nichtErreicht = 0;
+    IB.forEach(ib => {
+      const pkt = {ib:ib, x:[], y:[]};
+      for (let u = 0.3; u <= Z.ucemax + 1e-9; u += (Z.ucemax-0.3)/15){
+        const k = kaskade(ib*1e-6, u, Z.rb, Z.rg, Z.rc, Z.rausch, 400);
+        schritte += k.schritte; if (!k.erreicht) nichtErreicht++;
+        pkt.x.push(k.uce); pkt.y.push(k.ic*1e3);
+        // Wieviel Spannung der Speisepunkt hierfuer braucht — daran entscheidet sich, ob der Punkt erreichbar ist
+        punkteListe.push({ib:ib, soll:u, uce:k.uce, ic:k.ic, erreicht:k.erreicht, anschlag:k.anschlag,
+                          uRC1:k.uce + k.ic*Z.rc, grenze:G.u_ad_max, treiber:G.u_da_max,
+                          codeC:k.codeC, schritte:k.schritte});
+      }
+      kurven.push(pkt);
+    });
+    FELD = {kurven:kurven, schritte:schritte, nichtErreicht:nichtErreicht, punkte:punkteListe,
+            ucemax:Z.ucemax, rc:Z.rc};
+    window.LABOR.feld = FELD;
+    zeichneFeld();
+    document.getElementById("feldtext").innerHTML =
+      kurven.length + " Basisstromkurven zu je 16 Punkten, jeder Punkt einzeln eingeregelt; "
+      + schritte + " Regelschritte insgesamt, "
+      + (nichtErreicht ? "<span class='schlecht'>" + nichtErreicht + " Punkte nicht erreicht</span> — dort steht der "
+                       + "Treiber am Anschlag (" + G.u_da_max.toFixed(2) + " V): fehlende Regelreserve, R<sub>C</sub> "
+                       + "verkleinern oder den Bereich kürzen"
+                       : "<span class='gut'>alle Punkte erreicht</span>") + ".";
+    kn.disabled = false; kn.textContent = "Kennlinienfeld aufnehmen";
+  }, 30);
+}
+function zeichneFeld(){
+  const c = document.getElementById("c_feld"), g = c.getContext("2d");
+  g.clearRect(0,0,c.width,c.height);
+  if (!FELD) return;
+  let imax = 0; FELD.kurven.forEach(k => k.y.forEach(v => imax = Math.max(imax, v)));
+  const F = feld(c, 52, 14, c.width-70, c.height-52, [0, Z.ucemax], [0, Math.max(imax*1.1, .5)],
+                 {xname:"U_CE [V]", yname:"I_C [mA]"});
+  const farben = ["#0E7C86","#C77400","#3B7A57","#B3261E","#6A4C93"];
+  FELD.kurven.forEach((k,i) => {
+    linie(F, k.x, k.y, farben[i%5], 1.8); punkte(F, k.x, k.y, farben[i%5], 2.4);
+    F.g.fillStyle = farben[i%5]; F.g.textAlign = "right"; F.g.font = "11px sans-serif";
+    F.g.fillText(k.ib + " µA", F.x(Z.ucemax)-3, F.y(k.y[k.y.length-1])-4);
+  });
+}
+
+/* ---------------------------------------------------------------- Vier Quadranten */
+function naechste(satz, wert){          // die Messkurve, deren Kennwert dem gesuchten am naechsten liegt
+  let b = 0; satz.forEach((s,i) => { if (Math.abs(s.wert-wert) < Math.abs(satz[b].wert-wert)) b = i; });
+  return satz[b];
+}
+function deute(x, xs, ys){              // lineare Zwischenrechnung auf einer nach x sortierten Messkurve
+  const o = xs.map((v,i) => [v, ys[i]]).filter(q => isFinite(q[0]) && isFinite(q[1])).sort((a,b) => a[0]-b[0]);
+  if (!o.length) return NaN;
+  if (x <= o[0][0]) return o[0][1];
+  for (let i = 1; i < o.length; i++) if (x <= o[i][0]){
+    const t = (x - o[i-1][0])/(o[i][0] - o[i-1][0] || 1);
+    return o[i-1][1] + t*(o[i][1] - o[i-1][1]);
+  }
+  return o[o.length-1][1];
+}
+function quadrat(F, xs, ys, farbe){
+  const g = F.g; g.save(); g.fillStyle = farbe;
+  for (let k = 0; k < xs.length; k++) if (isFinite(xs[k]) && isFinite(ys[k]))
+    g.fillRect(F.x(xs[k])-2.5, F.y(ys[k])-2.5, 5, 5);
+  g.restore();
+}
+function zeichneQuadranten(){
+  const c = document.getElementById("c_quad"), g = c.getContext("2d");
+  g.clearRect(0,0,c.width,c.height);
+  const icq = Z.icq*1e-3, vceq = Z.vceq, h = hParam(icq, vceq), ibq = h.ib*1e6, vbeq = h.vbe;
+  const VCEMAX = 11, ICMAX = 11.5, IBMAX = 45, VBEMAX = 0.75;
+  const B = 330, Hh = 320, x1 = 56, x2 = x1+B+8, y1 = 26, y2 = y1+Hh+8;
+  const MESS = "#233b45", FAM = "#9aa7ad", ACC = "#0E7C86", QQ = "#B3261E";
+
+  const Q2 = feld(c, x1, y1, B, Hh, [0, IBMAX], [0, ICMAX], {xum:true, xtext:false, yname:"I_C [mA]"});
+  const Q1 = feld(c, x2, y1, B, Hh, [0, VCEMAX], [0, ICMAX], {xtext:false, ytext:false});
+  const Q3 = feld(c, x1, y2, B, Hh, [0, IBMAX], [0, VBEMAX], {xum:true, yum:true, xname:"I_B [µA]", yname:"U_BE [V]"});
+  const Q4 = feld(c, x2, y2, B, Hh, [0, VCEMAX], [0, VBEMAX], {yum:true, ytext:false, xname:"U_CE [V]"});
+
+  // Q1: Modellschar + Messpunkte
+  [8,16,24,32,40].forEach(ib0 => {
+    const xs = [], ys = [];
+    for (let v = 0.25; v <= VCEMAX; v += VCEMAX/70){ xs.push(v); ys.push(icM(vbeFuerIb(ib0*1e-6, v), v)*1e3); }
+    linie(Q1, xs, ys, FAM, 1.3);
+    Q1.g.fillStyle = "#6a7a82"; Q1.g.font = "10px sans-serif"; Q1.g.textAlign = "right";
+    Q1.g.fillText(ib0+"µA", Q1.x(VCEMAX)-3, Q1.y(ys[ys.length-1])-3);
+  });
+  DATEN.Ic_Vce.forEach(s => punkte(Q1, s.x, s.y, MESS, 1.7));
+  { const xs = [], ys = [];
+    for (let v = 0.25; v <= VCEMAX; v += VCEMAX/80){ xs.push(v); ys.push(icM(vbeFuerIb(h.ib, v), v)*1e3); }
+    linie(Q1, xs, ys, ACC, 2.3); }
+
+  // Q2: Uebertragung bei U_CE des Arbeitspunkts
+  { const xs = [], ys = [];
+    for (let vb = 0.45; vb <= vbeq+0.035; vb += 0.0012){ xs.push(ibM(vb, vceq)*1e6); ys.push(icM(vb, vceq)*1e3); }
+    linie(Q2, xs, ys, ACC, 2.3);
+    let best = 0; DATEN.Ic_Ib.forEach((s,i) => { if (Math.abs(s.wert-vceq) < Math.abs(DATEN.Ic_Ib[best].wert-vceq)) best = i; });
+    punkte(Q2, DATEN.Ic_Ib[best].x, DATEN.Ic_Ib[best].y, MESS, 2.4);
+    Q2.g.fillStyle = MESS; Q2.g.font = "11px sans-serif"; Q2.g.textAlign = "left";
+    Q2.g.fillText("Messung bei U_CE = " + DATEN.Ic_Ib[best].wert + " V", x1+10, y1+Hh-10); }
+
+  // Q3: Eingangskennlinie + aus zwei Messdateien ueber den gemeinsamen Kollektorstrom rekonstruiert
+  { const xs = [], ys = [];
+    for (let vb = 0.45; vb <= vbeq+0.035; vb += 0.0012){ xs.push(ibM(vb, vceq)*1e6); ys.push(vb); }
+    linie(Q3, xs, ys, ACC, 2.3);
+    const a = naechste(DATEN.Ic_Vbe, vceq), b2 = naechste(DATEN.Ic_Ib, vceq);
+    if (a && b2){
+      const lo = Math.max(0.5, Math.min.apply(null, b2.y)), hi = Math.min(Math.max.apply(null, a.y), Math.max.apply(null, b2.y));
+      const px = [], py = [];
+      for (let k = 0; k < 14; k++){ const ic = lo + (hi-lo)*k/13;
+        px.push(deute(ic, b2.y, b2.x)); py.push(deute(ic, a.y, a.x)); }
+      quadrat(Q3, px, py, MESS);
+    } }
+  // Q4: Rueckwirkung + rekonstruiert (I_C(U_CE) aus einer Datei, U_BE(I_C) aus der anderen)
+  { const xs = [], ys = [];
+    for (let v = 0.3; v <= VCEMAX; v += VCEMAX/80){ xs.push(v); ys.push(vbeFuerIb(h.ib, v)); }
+    linie(Q4, xs, ys, ACC, 2.3);
+    const o = naechste(DATEN.Ic_Vce, h.ib*1e6), px = [], py = [];
+    DATEN.Ic_Vbe.forEach(s => { if (s.wert < 1) return;
+      const icAt = deute(s.wert, o.x, o.y);
+      if (icAt > 0.5 && icAt < Math.max.apply(null, s.y)){ px.push(s.wert); py.push(deute(icAt, s.y, s.x)); } });
+    quadrat(Q4, px, py, MESS); }
+
+  // Konstruktionslinien und Arbeitspunkte
+  g.save(); g.strokeStyle = QQ; g.lineWidth = 1; g.globalAlpha = .6;
+  const w = (F,a,b,cc,d) => { g.beginPath(); g.moveTo(F.x(a),F.y(b)); g.lineTo(F.x(cc),F.y(d)); g.stroke(); };
+  w(Q1,0,Z.icq,VCEMAX,Z.icq); w(Q2,0,Z.icq,IBMAX,Z.icq);
+  w(Q2,ibq,0,ibq,ICMAX);      w(Q3,ibq,0,ibq,VBEMAX);
+  w(Q3,0,vbeq,IBMAX,vbeq);    w(Q4,0,vbeq,VCEMAX,vbeq);
+  w(Q1,vceq,0,vceq,ICMAX);    w(Q4,vceq,0,vceq,VBEMAX);
+  g.globalAlpha = 1;
+  [[Q1,vceq,Z.icq],[Q2,ibq,Z.icq],[Q3,ibq,vbeq],[Q4,vceq,vbeq]].forEach(q => {
+    g.beginPath(); g.arc(q[0].x(q[1]), q[0].y(q[2]), 5.5, 0, 6.2832);
+    g.fillStyle = QQ; g.fill(); g.strokeStyle = "#fff"; g.lineWidth = 1.5; g.stroke();
+  });
+  g.restore();
+  g.fillStyle = "#0b616a"; g.font = "bold 12px sans-serif"; g.textAlign = "left";
+  g.fillText("② Übertragung · h21e", x1+8, y1+16);
+  g.fillText("① Ausgangskennlinien · h22e", x2+8, y1+16);
+  g.fillText("③ Eingang · h11e", x1+8, y2+Hh-8);
+  g.fillText("④ Rückwirkung · h12e", x2+8, y2+Hh-8);
+
+  const v = window.LABOR.vergleich(), s = (a,b) => "<span>"+a+"</span><b>"+b+"</b>";
+  document.getElementById("abweichung").innerHTML =
+    s("I<sub>C</sub>(U<sub>CE</sub>), " + v.Ic_Vce.n + " Punkte", v.Ic_Vce.rms.toFixed(3) + " % / " + v.Ic_Vce.max.toFixed(3) + " %") +
+    s("I<sub>C</sub>(I<sub>B</sub>), " + v.Ic_Ib.n + " Punkte", v.Ic_Ib.rms.toFixed(3) + " % / " + v.Ic_Ib.max.toFixed(3) + " %") +
+    s("Arbeitspunkt U<sub>BE</sub>", (vbeq*1e3).toFixed(1) + " mV") +
+    s("Arbeitspunkt I<sub>B</sub>", ibq.toFixed(2) + " µA") +
+    s("h<sub>FE</sub> = I<sub>C</sub>/I<sub>B</sub>", (icq/h.ib).toFixed(1));
+}
+
+/* ---------------------------------------------------------------- Kleinsignal */
+function zeigeKleinsignal(){
+  const h = hParam(Z.icq*1e-3, Z.vceq), A = hZuA(h), V = verstaerker();
+  const s = (a,b) => "<span>"+a+"</span><b>"+b+"</b>";
+  document.getElementById("hwerte").innerHTML =
+    s("Arbeitspunkt", Z.icq.toFixed(2) + " mA / " + Z.vceq.toFixed(2) + " V") +
+    s("U<sub>BE</sub>", (h.vbe*1e3).toFixed(1) + " mV") +
+    s("I<sub>B</sub>", (h.ib*1e6).toFixed(2) + " µA") +
+    s("h<sub>11e</sub>", h.h11.toFixed(1) + " Ω") +
+    s("h<sub>12e</sub>", h.h12.toExponential(3)) +
+    s("h<sub>21e</sub>", h.h21.toFixed(2)) +
+    s("h<sub>22e</sub>", (h.h22*1e6).toFixed(3) + " µS") +
+    s("Δ<sub>h</sub>", h.Dh.toFixed(6)) +
+    s("g<sub>m</sub> (Ableitung)", (h.gm*1e3).toFixed(3) + " mS") +
+    s("g<sub>m</sub> = I<sub>C</sub>/(n·V<sub>T</sub>)", (Z.icq*1e-3/(P.n*VT)*1e3).toFixed(3) + " mS") +
+    s("r<sub>o</sub> = 1/h<sub>22e</sub>", (1/h.h22/1e3).toFixed(2) + " kΩ");
+  document.getElementById("amatrix").textContent = matrixText(A);
+  document.getElementById("agesamt").textContent = matrixText(V.A);
+  document.getElementById("verst").innerHTML =
+    s("Schaltung", "U<sub>CC</sub> " + SCH.Vcc + " V · R<sub>C</sub> " + SCH.Rc/1e3 + " k · R<sub>B</sub> " + SCH.Rb/1e3 + " k") +
+    s("Last / Quelle", "R<sub>L</sub> " + SCH.RL/1e3 + " k · R<sub>i</sub> " + SCH.Ri/1e3 + " k") +
+    s("Newton-Schritte", V.it) +
+    s("Arbeitspunkt U<sub>BE</sub>", (V.vbe*1e3).toFixed(1) + " mV") +
+    s("Arbeitspunkt U<sub>CE</sub>", V.vce.toFixed(2) + " V") +
+    s("I<sub>B</sub> / I<sub>C</sub>", (V.ib*1e6).toFixed(2) + " µA / " + (V.ic*1e3).toFixed(2) + " mA") +
+    s("h<sub>FE</sub>", V.hFE.toFixed(0)) +
+    s("r<sub>ein</sub>", V.r_ein.toFixed(0) + " Ω") +
+    s("r<sub>aus</sub>", V.r_aus.toFixed(0) + " Ω") +
+    s("A<sub>v</sub>", V.A_v.toFixed(1) + "  (" + (20*Math.log10(Math.abs(V.A_v))).toFixed(1) + " dB)") +
+    s("A<sub>i</sub>", V.A_i.toFixed(1)) +
+    s("A<sub>vs</sub>", V.A_vs.toFixed(1));
+  const gmV = V.ic/(P.n*VT), rpar = 1/(1/SCH.Rc + 1/SCH.RL + V.h.h22);
+  document.getElementById("handprobe").innerHTML =
+    "Handprobe: A<sub>v</sub> ≈ −g<sub>m</sub>·(R<sub>C</sub>∥R<sub>L</sub>∥r<sub>o</sub>) = −"
+    + (gmV*1e3).toFixed(0) + " mS · " + rpar.toFixed(0) + " Ω = " + (-gmV*rpar).toFixed(1)
+    + " — die Kettenrechnung sagt " + V.A_v.toFixed(1) + ".";
+  zeichneVerstaerker(V);
+  window.LABOR.kleinsignal = {h:h, A:A, verstaerker:V};
+}
+function matrixText(A){
+  const f = v => (v >= 0 ? " " : "") + v.toExponential(5);
+  return "⎡ " + f(A[0][0]) + "   " + f(A[0][1]) + " ⎤\n⎣ " + f(A[1][0]) + "   " + f(A[1][1]) + " ⎦";
+}
+function zeichneVerstaerker(V){
+  const c = document.getElementById("c_verst"), g = c.getContext("2d");
+  g.clearRect(0,0,c.width,c.height);
+  const F = feld(c, 52, 14, c.width-70, c.height-52, [0, SCH.Vcc], [0, SCH.Vcc/SCH.Rc*1e3*1.12],
+                 {xname:"U_CE [V]", yname:"I_C [mA]"});
+  [8,16,24,32,40,V.ib*1e6].forEach((ib0,i) => {
+    const xs = [], ys = [];
+    for (let v = 0.25; v <= SCH.Vcc; v += SCH.Vcc/80){ xs.push(v); ys.push(icM(vbeFuerIb(ib0*1e-6, v), v)*1e3); }
+    linie(F, xs, ys, i === 5 ? "#0E7C86" : "#8a979d", i === 5 ? 2.3 : 1.3);
+  });
+  linie(F, [0, SCH.Vcc], [SCH.Vcc/SCH.Rc*1e3, 0], "#333", 1.2);            // Gleichstrom-Arbeitsgerade
+  // Wechselstrom-Arbeitsgerade: durch den Arbeitspunkt mit der Steigung -1/(R_C parallel R_L)
+  const rp = 1/(1/SCH.Rc + 1/SCH.RL);
+  linie(F, [Math.max(0, V.vce - V.ic*rp), V.vce + V.ic*rp],
+           [V.ic*1e3 + Math.min(V.vce, V.ic*rp)/rp*1e3, 0], "#6A4C93", 1.4);
+  g.beginPath(); g.arc(F.x(V.vce), F.y(V.ic*1e3), 5.5, 0, 6.2832);
+  g.fillStyle = "#B3261E"; g.fill(); g.strokeStyle = "#fff"; g.lineWidth = 1.5; g.stroke();
+  g.fillStyle = "#41505a"; g.font = "11px sans-serif"; g.textAlign = "right";
+  g.fillText("— Gleichstrom-Arbeitsgerade (R_C)", c.width-16, 32);
+  g.fillStyle = "#6A4C93"; g.fillText("— Wechselstrom-Arbeitsgerade (R_C ∥ R_L)", c.width-16, 48);
+  g.fillStyle = "#0E7C86"; g.fillText("— Kennlinie im Arbeitspunkt", c.width-16, 64);
+}
+
+/* ---------------------------------------------------------------- Aufbau */
+window.LABOR = {stand:STAND, modell:{icM:icM, ibM:ibM, vbeAusIc:vbeAusIc, vbeFuerIb:vbeFuerIb},
+                hParam:hParam, hZuA:hZuA, verstaerker:verstaerker, vergleich:vergleich,
+                kaskade:kaskade, letzt:null, feld:null, kleinsignal:null,
+                wandler:{roh:roh, volt:volt, daCode:daCode, daVolt:daVolt}};
+
+document.querySelectorAll("#reiter button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("#reiter button").forEach(x => x.classList.remove("an"));
+  document.querySelectorAll("main > section").forEach(x => x.classList.remove("an"));
+  b.classList.add("an");
+  document.getElementById("s-" + b.dataset.z).classList.add("an");
+  if (b.dataset.z === "quadranten") zeichneQuadranten();
+  if (b.dataset.z === "kleinsignal") zeigeKleinsignal();
+}));
+
+bauRegler("regler", REGLER, id => { if (id === "ucemax") zeichneFeld(); else mess(); zeigeGrenzen(); });
+bauRegler("regler2", REGLER2, () => { zeichneQuadranten(); zeigeKleinsignal(); });
+
+function zeigeGrenzen(){
+  const ibmax = ((G.u_da_max - 0.7)/Z.rb - 0.7/Z.rg)*1e6;
+  const aufl = G.k_ad*Math.sqrt(Math.pow(1/Z.rb,2) + Math.pow(1/Z.rb + 1/Z.rg,2))*1e9;
+  const ohne = Math.SQRT2*G.k_ad/Z.rb*1e9;
+  document.getElementById("grenzen").innerHTML =
+    "Mit diesen Widerständen: größter Basisstrom rund <b>" + ibmax.toFixed(0) + " µA</b> "
+    + "(Speisepunkt höchstens " + G.u_da_max.toFixed(2) + " V). Auflösung des Basisstroms <b>"
+    + aufl.toFixed(0) + " nA</b> = " + (aufl/1e3/Z.ib*100).toFixed(2) + " % vom Sollwert — davon "
+    + (ohne).toFixed(0) + " nA aus der Differenzmessung über R<sub>B</sub> und der Rest aus dem "
+    + "Abzweigstrom durch R<sub>B_GND</sub>: <b>dieser Ableitwiderstand kostet die Auflösung</b>. "
+    + "Ein Schritt am Digital-Analog-Umsetzer ändert I<sub>B</sub> dagegen nur um "
+    + (G.k_da_klemme/Z.rb*1e9).toFixed(0) + " nA. "
+    + "Größter Kollektorstrom bei U<sub>CE</sub> = " + Z.uce.toFixed(1) + " V: rund <b>"
+    + ((G.u_da_max - Z.uce)/Z.rc*1e3).toFixed(1) + " mA</b>.";
+}
+document.getElementById("nmiw").textContent = G.NMIW;
+document.getElementById("messen").addEventListener("click", mess);
+document.getElementById("kennlinie").addEventListener("click", kennlinienfeld);
+mess(); zeigeGrenzen();
+</script>
+</body>
+</html>

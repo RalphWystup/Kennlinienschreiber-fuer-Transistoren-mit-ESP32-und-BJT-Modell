@@ -1,0 +1,59 @@
+{
+ "datum": "2026-09-30T07:07:26.883Z",
+ "fassung": "1.1",
+ "befunde": [
+  {
+   "gut": true,
+   "text": "keine Konsolenfehler"
+  },
+  {
+   "gut": true,
+   "text": "Werkzeug vor Text: erster Knopf bei 355 px (Schranke 400 px)"
+  },
+  {
+   "gut": true,
+   "text": "Simulation gegen Messung: I_C(U_CE) 146 Punkte, RMS 0.621 %, größte 1.771 % (Schranke 2,5 %); I_C(I_B) 69 Punkte, RMS 0.573 %, größte 1.299 % (Schranke 2,0 %)"
+  },
+  {
+   "gut": true,
+   "text": "Seite gegen Python (bjt_kennwerte.py): größte Abweichung 1.771 % gegen 1.771 % und 1.299 % gegen 1.299 % — Unterschied 0.0000 Prozentpunkte (Schranke 0,02)"
+  },
+  {
+   "gut": true,
+   "text": "Kaskade rastet ein: 163 Regelschritte (Schranke 250); Restabweichung I_B 0.208 % = 0.20 Zählschritte (Schranke 1,5 — feiner kann die Messung nicht auflösen: ein Zählschritt sind 211 nA = 1.05 %); U_CE 3.15 mV (Schranke 5 mV); I_C = 5.3209 mA, h_FE = 265.5"
+  },
+  {
+   "gut": true,
+   "text": "Register: Wandlung Klemme→Registerwert auf ≤ 1 Zählschritt genau (ja); Mittelwert = ganzzahlige Division der Summe über 10 Abtastungen (ja); Rückrechnung Register 5 (roh) → U_CE: 4.99706 V gegen 4.99706 V, Unterschied -0.00 Zählschritte (Schranke 2); Register 9 (Mittelwert) liegt 33.0 Zählschritte daneben — das ist der Nachlauf des Mittelwerts innerhalb des Toleranzbandes"
+  },
+  {
+   "gut": true,
+   "text": "h-Parameter bei I_C = 5 mA, U_CE = 5 V — Seite: h11e 1397.2 Ω, h21e 269.15, h22e 34.388 µS, h12e -1.872e-5; Python: 1397.2 Ω, 269.15, 34.388 µS, -1.872e-5 — größter Unterschied 0.0000 % (Schranke 0,5 %)"
+  },
+  {
+   "gut": true,
+   "text": "Emitterschaltung — Seite: U_CE 7.364 V, I_C 7.636 mA, r_ein 944.3 Ω, r_aus 948.6 Ω, A_v -254.29, A_vs -123.50; Python: 7.364 V, 7.636 mA, 944.3 Ω, 948.6 Ω, -254.29, -123.50 — größter Unterschied 0.0000 % (Schranke 0,5 %)"
+  },
+  {
+   "gut": true,
+   "text": "Kennlinienfeld bis U_CE = 6 V mit R_C = 470 Ω: 5 Basisstromkurven, 80 Punkte, Regelschritte insgesamt 14759, längster Punkt 219 Schritte, 0 Punkte nicht erreicht (Schranke 0)"
+  },
+  {
+   "gut": true,
+   "text": "Regelreserve: bis U_CE = 11 V bleiben 15 von 80 Punkten unerreichbar. Bei jedem davon steht der Stellwert am oberen Anschlag (Registerwert 65535, Treiber 12.32 V) und der zurückgerechnete Speisepunkt liegt an der Grenze des Messwegs 12.102 V (kleinster Wert 12.102 V, Schranke 99 %); kein erreichter Punkt steht am Anschlag — das ist die fehlende Regelreserve, nicht ein Reglerfehler"
+  },
+  {
+   "gut": true,
+   "text": "Dokumentation in der Seite: Kaskadenregelung, Registerplan, Gummel, Kettenmatrix, Stolperfallen, Steckwiderstände"
+  },
+  {
+   "gut": true,
+   "text": "Seite neutralisiert: kein Kennwort, kein Netzname, keine Netzadresse, kein Rechnerpfad, keiner der 6 Firmennamen aus pruefe_privat.json"
+  },
+  {
+   "gut": true,
+   "text": "Kopf: Fassung 1.1 · 30.09.2026 · Prof. Dr.-Ing. Ralph Wystup M.Sc. — erstellt mit KI und Agent (Claude Code, Anthropic)"
+  }
+ ],
+ "fehler": 0
+}
