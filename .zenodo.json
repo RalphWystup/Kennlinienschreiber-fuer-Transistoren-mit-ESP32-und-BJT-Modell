@@ -1,0 +1,34 @@
+{
+  "title": "Kennlinienschreiber für Transistoren",
+  "description": "<p>Ein selbstgebauter Messplatz nimmt Kennlinienfelder auf: zwei Digital-Analog-Umsetzer speisen Basis- und Kollektorzweig, vier Analog-Digital-Umsetzer messen zurück, eine Kaskade aus zwei Reglern hält den Arbeitspunkt.</p><p>Die Arbeit besteht aus einem Manuskript, das die Herleitung geschlossen zeigt, einer Seite, die im Browser rechnet und ohne Netz läuft, einem Prüfplan mit einer Schranke je Kriterium, und den zugehörigen Programmen und Messdaten. Seite: <a href=\"https://ralphwystup.github.io/Kennlinienschreiber-fuer-Transistoren-mit-ESP32-und-BJT-Modell/\">https://ralphwystup.github.io/Kennlinienschreiber-fuer-Transistoren-mit-ESP32-und-BJT-Modell/</a> · Übersicht aller Arbeiten: <a href=\"https://ralphwystup.github.io/\">https://ralphwystup.github.io/</a></p>",
+  "creators": [
+    {
+      "name": "Wystup, Ralph"
+    }
+  ],
+  "upload_type": "software",
+  "license": "MIT",
+  "access_right": "open",
+  "language": "deu",
+  "keywords": [
+    "Kennlinienschreiber",
+    "Curve Tracer",
+    "ESP32",
+    "Modbus",
+    "Kaskadenregelung"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://ralphwystup.github.io/Kennlinienschreiber-fuer-Transistoren-mit-ESP32-und-BJT-Modell/",
+      "relation": "isIdenticalTo",
+      "resource_type": "software",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://ralphwystup.github.io/",
+      "relation": "isPartOf",
+      "scheme": "url"
+    }
+  ],
+  "notes": "Erstellt mit KI und Agent (Claude Code, Anthropic). Alle Zahlen gerechnet oder gemessen, jede Rechnung von Hand nachvollziehbar."
+}
