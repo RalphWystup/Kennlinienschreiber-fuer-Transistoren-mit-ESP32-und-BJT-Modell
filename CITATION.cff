@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "Wenn Sie diese Arbeit verwenden, zitieren Sie sie bitte wie folgt."
+title: "Kennlinienschreiber für Transistoren"
+abstract: "Ein selbstgebauter Messplatz nimmt Kennlinienfelder auf: zwei Digital-Analog-Umsetzer speisen Basis- und Kollektorzweig, vier Analog-Digital-Umsetzer messen zurück, eine Kaskade aus zwei Reglern hält den Arbeitspunkt."
+type: software
+authors:
+  - family-names: Wystup
+    given-names: Ralph
+    name-particle: ""
+    name-suffix: "Prof. Dr.-Ing., M.Sc."
+license: MIT
+url: "https://ralphwystup.github.io/Kennlinienschreiber-fuer-Transistoren-mit-ESP32-und-BJT-Modell/"
+repository-code: "https://github.com/RalphWystup/Kennlinienschreiber-fuer-Transistoren-mit-ESP32-und-BJT-Modell"
+date-released: "2026-09-30"
+keywords:
+  - Kennlinienschreiber
+  - Curve Tracer
+  - ESP32
+  - Modbus
+  - Kaskadenregelung
